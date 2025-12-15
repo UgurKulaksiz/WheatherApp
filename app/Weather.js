@@ -1,7 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, Pressable, TextInput, ScrollView } from 'react-native';
+
+import { useRef, useState } from 'react';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { getForecast, getWeather } from '../lib/api';
 import { styles } from '../lib/styles';
-import { getWeather, getForecast } from '../lib/api';
 
 // Formatage de l'heure en français (24h)
 const formatTime = (unixTimestamp) => {
@@ -123,13 +124,25 @@ const Weather = () => {
                 <Text style={styles.title}>🌤️ Portail météo</Text>
                 <Text style={styles.subtitle}>par Uğur Kulaksız</Text>
 
-                <TextInput
-                    style={styles.input}
-                    placeholder="Entrez le nom de la ville"
-                    placeholderTextColor="#cccccc"
-                    value={city}
-                    onChangeText={setCity}
-                />
+                
+                {/* Champ de saisie avec croix */}
+                <View style={styles.croixContainer}>
+                    <TextInput
+                        style={[styles.input, { paddingRight: 40 }]} // espace pour la croix
+                        placeholder="Rechercher une ville"
+                        placeholderTextColor="#cccccc"
+                        value={city}
+                        onChangeText={setCity}
+                    />
+                    {city.length > 0 && (
+                        <Pressable
+                            onPress={() => setCity('')}
+                            style={styles.croixButton}
+                        >
+                        <Text style={styles.croix}>✕</Text>
+                        </Pressable>
+                    )}
+                </View>
 
                 <View style={styles.buttonGroup}>
                     <Pressable onPress={handleGetWeather} style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}>
