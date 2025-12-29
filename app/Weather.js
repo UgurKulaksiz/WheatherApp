@@ -1,6 +1,6 @@
 
 import { useRef, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Image, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { getForecast, getWeather } from '../lib/api';
 import { styles } from '../lib/styles';
 
@@ -124,7 +124,7 @@ const Weather = () => {
                 <Text style={styles.title}>🌤️ Portail météo</Text>
                 <Text style={styles.subtitle}>par Uğur Kulaksız</Text>
 
-                
+
                 {/* Champ de saisie avec croix */}
                 <View style={styles.croixContainer}>
                     <TextInput
@@ -139,7 +139,7 @@ const Weather = () => {
                             onPress={() => setCity('')}
                             style={styles.croixButton}
                         >
-                        <Text style={styles.croix}>✕</Text>
+                            <Text style={styles.croix}>✕</Text>
                         </Pressable>
                     )}
                 </View>
@@ -154,7 +154,11 @@ const Weather = () => {
                     </Pressable>
                 </View>
 
-                <ScrollView style={styles.results}>
+                <ScrollView
+                    style={styles.results}
+                    showsVerticalScrollIndicator={true}
+                    indicatorStyle="white"
+                >
                     {displayCity !== "" && (
                         <View style={styles.weatherInfo}>
                             <Text style={[styles.heading, { fontSize: 22, marginTop: 10 }]}>
@@ -183,9 +187,22 @@ const Weather = () => {
 
                     {weatherData && (
                         <View style={styles.weatherInfo}>
-                            <Text style={styles.weatherText}>
-                                <Text style={styles.heading}>Température:</Text> {weatherData.temperature} °C
-                            </Text>
+                            <View style={styles.tempRow}>
+                                <Text style={styles.weatherText}>
+                                    <Text style={styles.heading}>Température:</Text> {weatherData.temperature} °C
+                                </Text>
+
+                                {weatherData.icon && (
+                                    <Image
+                                        source={{
+                                            uri: `https://openweathermap.org/img/wn/${weatherData.icon}@2x.png`,
+                                        }}
+                                        style={styles.currentWeatherIcon}
+                                        resizeMode="contain"
+                                    />
+                                )}
+                            </View>
+
                             <Text style={styles.weatherText}>
                                 <Text style={styles.heading}>Description:</Text> {weatherData.description}
                             </Text>
@@ -194,18 +211,21 @@ const Weather = () => {
 
                     {forecastData && (
                         <View style={styles.weatherInfo}>
-                            <Text style={[styles.heading, styles.forecastTitle]}>Prévisions par créneaux de 3h pour le {formatDateLabel(days[selectedDayIndex])} :</Text>
+                            <Text style={[styles.heading, styles.forecastTitle]}>
+                                Prévisions par créneaux de 3h pour le {formatDateLabel(days[selectedDayIndex])} :
+                            </Text>
 
                             {displayItems.length === 0 ? (
-                                <Text style={styles.weatherText}>Aucune donnée de prévision pour ce jour.</Text>
-                            ) : (
+                                <Text style={styles.weatherText}>
+                                    Aucune donnée de prévision pour ce jour.
+                                </Text>
+                            ) : Platform.OS === 'web' ? (
+                                /* ================= WEB : HORIZONTAL ================= */
                                 <View style={styles.forecastScrollWrapper}>
-                                    {/* Flèche gauche */}
-                                    <Pressable onPress={scrollLeft} style={({ pressed }) => [styles.arrowButton, pressed && styles.arrowButtonPressed]}>
+                                    <Pressable onPress={scrollLeft} style={styles.arrowButton}>
                                         <Text style={styles.arrowText}>❮</Text>
                                     </Pressable>
 
-                                    {/* ScrollView horizontal */}
                                     <ScrollView
                                         ref={scrollRef}
                                         horizontal
@@ -220,19 +240,70 @@ const Weather = () => {
                                                     {formatTime(forecastItem.dt)}
                                                     {forecastItem.isCurrent ? ' (actuel)' : ''}
                                                 </Text>
-                                                <Text style={styles.forecastTemp}>🌡 {forecastItem.main.temp != null ? `${forecastItem.main.temp.toFixed(1)} °C` : '—'}</Text>
-                                                <Text style={styles.forecastDesc}>{forecastItem.weather?.[0]?.description ?? ''}</Text>
+
+                                                <Text style={styles.forecastTemp}>
+                                                    🌡 {forecastItem.main.temp?.toFixed(1)} °C
+                                                </Text>
+
+                                                <View style={styles.forecastIconDesc}>
+                                                    {forecastItem.weather?.[0]?.icon && (
+                                                        <Image
+                                                            source={{
+                                                                uri: `https://openweathermap.org/img/wn/${forecastItem.weather[0].icon}@2x.png`,
+                                                            }}
+                                                            style={styles.weatherIcon}
+                                                        />
+                                                    )}
+                                                    <Text style={styles.forecastDesc}>
+                                                        {forecastItem.weather?.[0]?.description}
+                                                    </Text>
+                                                </View>
                                             </View>
                                         ))}
                                     </ScrollView>
 
-                                    {/* Flèche droite */}
-                                    <Pressable onPress={scrollRight} style={({ pressed }) => [styles.arrowButton, pressed && styles.arrowButtonPressed]}>
+                                    <Pressable onPress={scrollRight} style={styles.arrowButton}>
                                         <Text style={styles.arrowText}>❯</Text>
                                     </Pressable>
                                 </View>
-                            )}
+                            ) : (
+                                /* ================= MOBILE : VERTICAL ================= */
+                                <ScrollView
+                                    style={styles.mobileForecastScroll}
+                                    showsVerticalScrollIndicator={true}
+                                    indicatorStyle="white"
+                                >
+                                    {displayItems.map((forecastItem, index) => (
+                                        <View key={index} style={styles.mobileForecastItem}>
+                                            <Text style={styles.mobileTime}>
+                                                {formatTime(forecastItem.dt)}
+                                                {forecastItem.isCurrent ? ' (actuel)' : ''}
+                                            </Text>
 
+                                            <Text style={styles.mobileTemp}>
+                                                🌡 {forecastItem.main.temp?.toFixed(1)} °C
+                                            </Text>
+
+                                            {forecastItem.weather?.[0]?.icon && (
+                                                <Image
+                                                    source={{
+                                                        uri: `https://openweathermap.org/img/wn/${forecastItem.weather[0].icon}@2x.png`,
+                                                    }}
+                                                    style={styles.mobileIcon}
+                                                />
+                                            )}
+
+                                            <Text
+                                                style={styles.mobileDesc}
+                                                numberOfLines={1}
+                                                ellipsizeMode="tail"
+                                            >
+                                                {forecastItem.weather?.[0]?.description}
+                                            </Text>
+                                        </View>
+                                    ))}
+                                </ScrollView>
+                            )}
                         </View>
                     )}
                 </ScrollView>
