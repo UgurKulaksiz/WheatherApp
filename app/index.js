@@ -1,5 +1,5 @@
-import { View, Text, Pressable, StatusBar } from "react-native";
 import { Link } from "expo-router";
+import { Pressable, StatusBar, Text, View } from "react-native";
 import { styles } from '../lib/styles';
 
 export default function Home() {
